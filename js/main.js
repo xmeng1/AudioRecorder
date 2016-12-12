@@ -42,6 +42,31 @@ function gotBuffers( buffers ) {
     var canvas_right = document.getElementById( "wavedisplay_right" );
     drawBuffer( canvas.width, canvas.height, canvas.getContext('2d'), buffers[0] );
     drawBuffer( canvas_right.width, canvas_right.height, canvas_right.getContext('2d'), buffers[1] );
+
+    //function floatTo16BitPCM(output, offset, input)
+    var offset = 0;
+    var input = buffers[0];
+
+    var bufferTemp = new ArrayBuffer(input.length*2);
+    var output = new DataView(bufferTemp);
+
+    for (var i = 0; i < input.length; i++, offset+=2){
+        var s = Math.max(-1, Math.min(1, input[i]));
+        output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    }
+
+    if(output.buffer!=null){
+        var binary = '';
+        var bytes = new Uint8Array( output.buffer );
+        var len = bytes.byteLength;
+        for (var i = 0; i < len; i++) {
+            binary += String.fromCharCode( bytes[ i ] );
+        }
+        var based64EncodedStr = window.btoa( binary );
+     }
+
+
+
     // the ONLY time gotBuffers is called is right after a new recording is completed - 
     // so here's where we should set up the download.
     audioRecorder.exportWAV( doneEncoding );
