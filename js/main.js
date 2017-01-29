@@ -24,7 +24,7 @@ var rafID = null;
 var analyserContext = null;
 var canvasWidth, canvasHeight;
 var recIndex = 0;
-
+var textToSave;
 /* TODO:
 
 - offer mono option
@@ -39,9 +39,9 @@ function saveAudio() {
 
 function gotBuffers( buffers ) {
     var canvas = document.getElementById( "wavedisplay" );
-    var canvas_right = document.getElementById( "wavedisplay_right" );
+    // var canvas_right = document.getElementById( "wavedisplay_right" );
     drawBuffer( canvas.width, canvas.height, canvas.getContext('2d'), buffers[0] );
-    drawBuffer( canvas_right.width, canvas_right.height, canvas_right.getContext('2d'), buffers[1] );
+    // drawBuffer( canvas_right.width, canvas_right.height, canvas_right.getContext('2d'), buffers[1] );
 
     //function floatTo16BitPCM(output, offset, input)
     var offset = 0;
@@ -63,6 +63,20 @@ function gotBuffers( buffers ) {
             binary += String.fromCharCode( bytes[ i ] );
         }
         var based64EncodedStr = window.btoa( binary );
+        console.log(based64EncodedStr.slice(0,10));
+        textToSave = based64EncodedStr;
+        // 'Modern' browsers (IE8+, use CSS-style selectors)
+        //document.querySelector('.base64str').innerHTML = based64EncodedStr.slice(0.10);
+
+        // window.URL = window.webkitURL || window.URL;
+        // window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+        // var file = new WebKitBlobBuilder();
+        // file.append(based64EncodedStr);
+        // var a = document.getElementById("save_file");
+        // a.hidden = '';
+        // a.href = window.URL.createObjectURL(file.getBlob('text/plain'));
+        // a.download = 'filename.txt';
+        // a.textContent = 'Download file!';
      }
 
 
@@ -70,6 +84,24 @@ function gotBuffers( buffers ) {
     // the ONLY time gotBuffers is called is right after a new recording is completed - 
     // so here's where we should set up the download.
     audioRecorder.exportWAV( doneEncoding );
+}
+
+function saveTextAsFile()
+{
+    //var textToSave = document.getElementById("inputTextToSave").value;
+    var textToSaveAsBlob = new Blob([textToSave], {type:"text/plain"});
+    var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
+    var fileNameToSaveAs = document.getElementById("inputFileNameToSaveAs").value;
+
+    var downloadLink = document.createElement("a");
+    downloadLink.download = fileNameToSaveAs;
+    downloadLink.innerHTML = "Download File";
+    downloadLink.href = textToSaveAsURL;
+    //downloadLink.onclick = destroyClickedElement;
+    downloadLink.style.display = "none";
+    document.body.appendChild(downloadLink);
+
+    downloadLink.click();
 }
 
 function doneEncoding( blob ) {
